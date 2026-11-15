@@ -7,13 +7,23 @@
   </head>
   <body>
     <main class="options">
-      <h1>Markdown Quick Preview 設定</h1>
+      <h1 class="brand"><img src="/icons/icon48.png" alt="" width="32" height="32" />Markdown Quick Preview 設定</h1>
       <section>
         <h2>GitHub Personal Access Tokens</h2>
         <p>
           Token 只存在本機 chrome.storage.local。fine-grained token 只能綁定一個 owner，可為不同 owner 或 repo
           各設一個。比對順序：owner/repo → owner → *（預設）。
         </p>
+        <div class="hint">
+          <p>建立 fine-grained token 時，只需要唯讀權限：</p>
+          <ul>
+            <li>Repository permissions：Read access to code, codespaces, and metadata</li>
+          </ul>
+          <p>
+            不需要其他權限。
+            <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">建立 Token</a>
+          </p>
+        </div>
         <div id="rules"></div>
         <div class="actions">
           <button id="add-rule" type="button">新增規則</button>

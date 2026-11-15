@@ -5,7 +5,17 @@
   "description": "快速預覽 Markdown 與 Mermaid：貼上文字、連結或 GitHub repo，產生臨時預覽頁。",
   "action": {
     "default_popup": "popup.html",
-    "default_title": "Markdown Quick Preview"
+    "default_title": "Markdown Quick Preview",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
   },
   "options_ui": {
     "page": "options.html",
