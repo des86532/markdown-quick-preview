@@ -1,9 +1,12 @@
-import { classifyInput } from '../lib/detect';
+import { classifyInput, type Detected } from '../lib/detect';
 import { type LinkKind, deleteLink, listLinks, type SavedLink } from '../lib/links';
 import { purgeExpired, savePaste } from '../lib/storage';
 import './popup.css';
 
 const input = document.getElementById('input') as HTMLTextAreaElement;
+const detectedEl = document.getElementById('detected') as HTMLParagraphElement;
+const forcePaste = document.getElementById('force-paste') as HTMLInputElement;
+const forcePasteLabel = document.getElementById('force-paste-label') as HTMLLabelElement;
 const useTab = document.getElementById('use-tab') as HTMLButtonElement;
 const previewButton = document.getElementById('preview') as HTMLButtonElement;
 const errorEl = document.getElementById('error') as HTMLParagraphElement;
@@ -72,9 +75,44 @@ async function renderLinks(): Promise<void> {
   linkList.replaceChildren(...links.map(renderLink));
 }
 
+function describe(d: Detected): string {
+  switch (d.kind) {
+    case 'empty':
+      return '';
+    case 'paste':
+      return '將以 Markdown 文字預覽';
+    case 'github': {
+      const { owner, repo, type, rest } = d.target;
+      if (type === 'repo') return `將預覽 GitHub repo：${owner}/${repo}`;
+      const path = `${owner}/${repo}/${rest.join('/')}`;
+      return type === 'tree' ? `將預覽 GitHub 資料夾：${path}` : `將預覽 GitHub 檔案：${path}`;
+    }
+    case 'url':
+      return '將讀取網址內容並以 Markdown 預覽';
+    case 'invalid':
+      return d.reason;
+  }
+}
+
+function currentDetection(): Detected {
+  const detected = classifyInput(input.value);
+  if (forcePaste.checked && detected.kind !== 'empty') {
+    return { kind: 'paste', content: input.value };
+  }
+  return detected;
+}
+
+function updateDetected(): void {
+  const raw = classifyInput(input.value);
+  forcePasteLabel.hidden = !(raw.kind === 'github' || raw.kind === 'url' || raw.kind === 'invalid');
+  const shown = currentDetection();
+  detectedEl.textContent = describe(shown);
+  detectedEl.dataset.state = shown.kind === 'invalid' ? 'invalid' : '';
+}
+
 async function preview(): Promise<void> {
   showError('');
-  const detected = classifyInput(input.value);
+  const detected = currentDetection();
   switch (detected.kind) {
     case 'empty':
       showError('請輸入內容');
@@ -126,11 +164,20 @@ async function offerCurrentTab(): Promise<void> {
   useTab.hidden = false;
   useTab.addEventListener('click', () => {
     input.value = url;
+    forcePaste.checked = false;
+    updateDetected();
     input.focus();
   });
 }
 
 previewButton.addEventListener('click', () => void runPreview());
+
+input.addEventListener('input', () => {
+  forcePaste.checked = false;
+  updateDetected();
+});
+
+forcePaste.addEventListener('change', updateDetected);
 
 input.addEventListener('keydown', (event) => {
   if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
@@ -147,4 +194,5 @@ openOptions.addEventListener('click', (event) => {
 void renderLinks().catch((error) => showError(`讀取快速連結失敗：${(error as Error).message}`));
 void purgeExpired().catch((error) => console.error('purgeExpired failed', error));
 void offerCurrentTab().catch((error) => console.error('tab lookup failed', error));
+updateDetected();
 input.focus();

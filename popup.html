@@ -13,6 +13,8 @@
         spellcheck="false"
         placeholder="貼上 Markdown 文字、GitHub repo 網址或 .md 連結"
       ></textarea>
+      <p id="detected" aria-live="polite"></p>
+      <label id="force-paste-label" hidden><input type="checkbox" id="force-paste" /> 以純文字預覽</label>
       <button id="use-tab" type="button" hidden></button>
       <div class="actions">
         <button id="preview" type="button">預覽</button>
