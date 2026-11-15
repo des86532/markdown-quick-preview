@@ -27,7 +27,7 @@ describe('classifyInput', () => {
     });
   });
 
-  it.each(['https://github.com/o/r', 'https://github.com/o/r.git', 'https://github.com/o/r/issues/1'])(
+  it.each(['https://github.com/o/r', 'https://github.com/o/r.git', 'github.com/o/r'])(
     'classifies %s as a repo',
     (input) => {
       expect(classifyInput(input)).toEqual({
@@ -36,6 +36,28 @@ describe('classifyInput', () => {
       });
     },
   );
+
+  it.each([
+    'https://github.com/o/r/issues/1',
+    'https://github.com/o/r/pulls',
+    'https://github.com/o/r/tree',
+  ])('rejects non-file GitHub page %s', (input) => {
+    expect(classifyInput(input)).toEqual({
+      kind: 'invalid',
+      reason: '只支援 repo 首頁、tree（資料夾）或 blob（檔案）網址',
+    });
+  });
+
+  it('adds https:// to protocol-less github.com URLs', () => {
+    expect(classifyInput('www.github.com/o/r/tree/main/docs')).toEqual({
+      kind: 'github',
+      target: { owner: 'o', repo: 'r', type: 'tree', rest: ['main', 'docs'] },
+    });
+  });
+
+  it('keeps a bare github.com as paste', () => {
+    expect(classifyInput('github.com')).toEqual({ kind: 'paste', content: 'github.com' });
+  });
 
   it('parses tree URLs with the ref and path segments', () => {
     expect(classifyInput('https://github.com/o/r/tree/main/docs/guide')).toEqual({
