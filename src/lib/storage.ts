@@ -1,3 +1,5 @@
+import type { TokenRule } from './tokens';
+
 export interface PasteRecord {
   content: string;
   title: string;
@@ -7,7 +9,8 @@ export interface PasteRecord {
 export const PASTE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
 const PASTE_PREFIX = 'paste:';
-const TOKEN_KEY = 'githubToken';
+const TOKENS_KEY = 'githubTokens';
+const LEGACY_TOKEN_KEY = 'githubToken';
 
 export function deriveTitle(content: string): string {
   const heading = content.match(/^#[ \t]+(.+)$/m);
@@ -58,15 +61,21 @@ export async function purgeExpired(): Promise<void> {
   if (expired.length > 0) await chrome.storage.local.remove(expired);
 }
 
-export async function getToken(): Promise<string> {
-  const stored = await chrome.storage.local.get(TOKEN_KEY);
-  return (stored[TOKEN_KEY] as string | undefined) ?? '';
+export async function getTokenRules(): Promise<TokenRule[]> {
+  const stored = await chrome.storage.local.get([TOKENS_KEY, LEGACY_TOKEN_KEY]);
+  const rules = stored[TOKENS_KEY];
+  if (Array.isArray(rules)) return rules as TokenRule[];
+
+  const legacy = stored[LEGACY_TOKEN_KEY];
+  if (typeof legacy === 'string' && legacy) {
+    const migrated: TokenRule[] = [{ pattern: '*', token: legacy }];
+    await chrome.storage.local.set({ [TOKENS_KEY]: migrated });
+    await chrome.storage.local.remove(LEGACY_TOKEN_KEY);
+    return migrated;
+  }
+  return [];
 }
 
-export async function setToken(token: string): Promise<void> {
-  if (token) {
-    await chrome.storage.local.set({ [TOKEN_KEY]: token });
-  } else {
-    await chrome.storage.local.remove(TOKEN_KEY);
-  }
+export async function setTokenRules(rules: TokenRule[]): Promise<void> {
+  await chrome.storage.local.set({ [TOKENS_KEY]: rules });
 }

@@ -1,7 +1,8 @@
 import { MERMAID_RE, buildBook, type BookNode } from '../lib/book';
 import { GithubError, blobUrl, fetchFile, loadRepoTree, rawUrl } from '../lib/github';
 import { type LinkResolver, renderDocument } from '../lib/render';
-import { deriveTitle, loadPaste, purgeExpired } from '../lib/storage';
+import { deleteLink, getLink, putLink, type SavedLink } from '../lib/links';
+import { PASTE_TTL_MS, deriveTitle, loadPaste, purgeExpired } from '../lib/storage';
 import 'github-markdown-css/github-markdown-light.css';
 import 'highlight.js/styles/github.css';
 import './viewer.css';
@@ -18,6 +19,7 @@ const content = $<HTMLElement>('content');
 const pager = $<HTMLElement>('pager');
 const prevButton = $<HTMLButtonElement>('prev');
 const nextButton = $<HTMLButtonElement>('next');
+const saveButton = $<HTMLButtonElement>('save-link');
 
 const ABSOLUTE_URL = /^[a-z][a-z0-9+.-]*:/i;
 
@@ -37,6 +39,7 @@ interface Action {
 let book: Book | null = null;
 let currentPage = '';
 let pendingFragment = '';
+let currentLink: Omit<SavedLink, 'createdAt'> | null = null;
 // Incremented by every navigation; async steps compare against it to drop stale results.
 let generation = 0;
 const fileCache = new Map<string, string>();
@@ -259,6 +262,22 @@ async function showPage(page: string, fragment: string): Promise<void> {
   }
 }
 
+function setSaved(saved: boolean): void {
+  saveButton.textContent = saved ? '已儲存' : '儲存連結';
+  saveButton.setAttribute('aria-pressed', String(saved));
+  saveButton.title = saved ? '點擊移除快速連結' : '';
+}
+
+async function offerSave(link: Omit<SavedLink, 'createdAt'>): Promise<void> {
+  currentLink = link;
+  try {
+    setSaved(Boolean(await getLink(link.query)));
+    saveButton.hidden = false;
+  } catch (error) {
+    console.error('link lookup failed', error);
+  }
+}
+
 async function openPaste(id: string): Promise<void> {
   setSource('貼上內容', null);
   const record = await loadPaste(id);
@@ -268,6 +287,12 @@ async function openPaste(id: string): Promise<void> {
     return;
   }
   setTitles(record.title, `${record.title} · MD Preview`);
+  void offerSave({
+    query: `paste=${encodeURIComponent(id)}`,
+    title: record.title,
+    kind: 'paste',
+    expiresAt: record.createdAt + PASTE_TTL_MS,
+  });
   await renderDocument(content, record.content, 'markdown', pasteResolver);
 }
 
@@ -312,6 +337,7 @@ async function openUrl(src: string): Promise<void> {
   const source = await response.text();
   const title = kind === 'mermaid' ? safeDecode(fileName(url.pathname)) : deriveTitle(source);
   setTitles(title, `${title} · MD Preview`);
+  void offerSave({ query: `url=${encodeURIComponent(src)}`, title, kind: 'url', expiresAt: null });
   await renderDocument(content, source, kind, urlResolver(url));
 }
 
@@ -362,6 +388,12 @@ async function openRepo(params: URLSearchParams): Promise<void> {
   const start = pageSet.has(requested) ? requested : pages[0];
   const rootQuery = root ? `&root=${encodeURIComponent(root)}` : '';
   history.replaceState(null, '', `?gh=${owner}/${repo}&ref=${encodeURIComponent(repoTree.ref)}${rootQuery}${pageHash(start)}`);
+  void offerSave({
+    query: location.search.slice(1),
+    title: root ? `${owner}/${repo}/${root}` : `${owner}/${repo}`,
+    kind: 'github',
+    expiresAt: null,
+  });
 
   sidebar.replaceChildren(renderSidebar(tree));
   sidebar.hidden = false;
@@ -418,6 +450,29 @@ content.addEventListener('click', (event) => {
 });
 
 window.addEventListener('hashchange', goToHashPage);
+
+saveButton.addEventListener('click', () => {
+  const link = currentLink;
+  if (!link) return;
+  saveButton.disabled = true;
+  void (async () => {
+    try {
+      if (saveButton.getAttribute('aria-pressed') === 'true') {
+        await deleteLink(link.query);
+        setSaved(false);
+      } else {
+        await putLink({ ...link, createdAt: Date.now() });
+        setSaved(true);
+      }
+    } catch (error) {
+      saveButton.textContent = '儲存失敗';
+      saveButton.title = (error as Error).message;
+      console.error('save link failed', error);
+    } finally {
+      saveButton.disabled = false;
+    }
+  })();
+});
 
 prevButton.addEventListener('click', () => goToPage(-1));
 nextButton.addEventListener('click', () => goToPage(1));

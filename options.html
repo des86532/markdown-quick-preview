@@ -9,16 +9,15 @@
     <main class="options">
       <h1>Markdown Quick Preview 設定</h1>
       <section>
-        <h2>GitHub Personal Access Token</h2>
+        <h2>GitHub Personal Access Tokens</h2>
         <p>
-          Token 只存在本機 chrome.storage.local。建議使用 fine-grained token，只授予目標 repo 的
-          Contents: Read-only。
+          Token 只存在本機 chrome.storage.local。fine-grained token 只能綁定一個 owner，可為不同 owner 或 repo
+          各設一個。比對順序：owner/repo → owner → *（預設）。
         </p>
-        <label for="token">Token</label>
-        <input type="password" id="token" autocomplete="off" spellcheck="false" />
+        <div id="rules"></div>
         <div class="actions">
+          <button id="add-rule" type="button">新增規則</button>
           <button id="save" type="button">儲存</button>
-          <button id="clear" type="button">清除</button>
         </div>
         <p id="status" role="status"></p>
       </section>
