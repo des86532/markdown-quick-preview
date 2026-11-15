@@ -1,0 +1,169 @@
+:root {
+  color-scheme: light;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang TC', sans-serif;
+  color: #1f2328;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+}
+
+#topbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+  min-width: 0;
+  padding: 8px 16px;
+  border-bottom: 1px solid #d0d7de;
+}
+
+#doc-title {
+  flex: 0 1 auto;
+  min-width: 0;
+  margin: 0;
+  font-size: 15px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#source-label {
+  flex-shrink: 0;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #f6f8fa;
+  color: #59636e;
+  font-size: 12px;
+}
+
+#source-link {
+  margin-left: auto;
+  flex-shrink: 0;
+  color: #0969da;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+#banner {
+  flex-shrink: 0;
+  padding: 8px 16px;
+  border-bottom: 1px solid #d4a72c;
+  background: #fff8c5;
+  color: #633c01;
+  font-size: 13px;
+}
+
+#layout {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+#sidebar {
+  width: 280px;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  overflow-y: auto;
+  padding: 12px 8px;
+  border-right: 1px solid #d0d7de;
+  font-size: 14px;
+}
+
+#sidebar ul {
+  margin: 0;
+  padding: 0 0 0 12px;
+  list-style: none;
+}
+
+#sidebar > ul {
+  padding-left: 0;
+}
+
+#sidebar summary {
+  padding: 3px 0;
+  color: #59636e;
+  cursor: pointer;
+}
+
+#sidebar a {
+  display: block;
+  padding: 3px 6px;
+  border-radius: 6px;
+  color: #1f2328;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+#sidebar a:hover {
+  background: #f6f8fa;
+}
+
+#sidebar a.active {
+  background: #ddf4ff;
+  color: #0969da;
+  font-weight: 600;
+}
+
+#main {
+  flex: 1;
+  min-width: 0;
+  box-sizing: border-box;
+  overflow-y: auto;
+  padding: 24px 32px;
+}
+
+#content.markdown-body {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0;
+}
+
+#content .status {
+  color: #59636e;
+}
+
+#pager {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  max-width: 900px;
+  margin: 32px auto 0;
+  padding-top: 16px;
+  border-top: 1px solid #d0d7de;
+}
+
+#pager button {
+  max-width: 48%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 6px 12px;
+  font: inherit;
+  border: 1px solid #d0d7de;
+  border-radius: 6px;
+  background: #f6f8fa;
+  cursor: pointer;
+}
+
+#pager button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+#content pre.mermaid {
+  text-align: center;
+  background: transparent;
+}
