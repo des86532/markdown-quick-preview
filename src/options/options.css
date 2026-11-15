@@ -23,12 +23,6 @@ h2 {
   font-size: 16px;
 }
 
-label {
-  display: block;
-  margin: 16px 0 6px;
-  font-weight: 600;
-}
-
 input {
   width: 100%;
   box-sizing: border-box;
@@ -36,6 +30,13 @@ input {
   font: 14px ui-monospace, SFMono-Regular, Menlo, monospace;
   border: 1px solid #d0d7de;
   border-radius: 6px;
+}
+
+.rule {
+  display: grid;
+  grid-template-columns: 200px 1fr auto;
+  gap: 8px;
+  margin-bottom: 8px;
 }
 
 .actions {

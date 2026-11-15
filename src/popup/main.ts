@@ -1,4 +1,5 @@
 import { classifyInput } from '../lib/detect';
+import { type LinkKind, deleteLink, listLinks, type SavedLink } from '../lib/links';
 import { purgeExpired, savePaste } from '../lib/storage';
 import './popup.css';
 
@@ -6,6 +7,8 @@ const input = document.getElementById('input') as HTMLTextAreaElement;
 const useTab = document.getElementById('use-tab') as HTMLButtonElement;
 const previewButton = document.getElementById('preview') as HTMLButtonElement;
 const errorEl = document.getElementById('error') as HTMLParagraphElement;
+const linksSection = document.getElementById('links') as HTMLElement;
+const linkList = document.getElementById('link-list') as HTMLUListElement;
 const openOptions = document.getElementById('open-options') as HTMLAnchorElement;
 
 function showError(message: string): void {
@@ -20,6 +23,53 @@ function shortLabel(url: string): string {
   const { host, pathname } = new URL(url);
   const text = host + pathname;
   return text.length > 40 ? `${text.slice(0, 40)}…` : text;
+}
+
+const KIND_LABEL: Record<LinkKind, string> = { github: 'GitHub', url: '網址', paste: '貼上' };
+
+function linkMeta(link: SavedLink): string {
+  const label = KIND_LABEL[link.kind];
+  if (link.kind !== 'paste' || link.expiresAt === null) return label;
+  if (Date.now() > link.expiresAt) return `${label} · 已過期`;
+  const date = new Date(link.expiresAt).toLocaleDateString('zh-TW', { month: 'numeric', day: 'numeric' });
+  return `${label} · ${date} 到期`;
+}
+
+function renderLink(link: SavedLink): HTMLLIElement {
+  const open = document.createElement('button');
+  open.type = 'button';
+  open.className = 'link-open';
+  const title = document.createElement('span');
+  title.className = 'link-title';
+  title.textContent = link.title;
+  const meta = document.createElement('span');
+  meta.className = 'link-meta';
+  meta.textContent = linkMeta(link);
+  open.append(title, meta);
+  open.addEventListener('click', () => {
+    void openViewer(link.query).catch((error) => showError(`開啟失敗：${(error as Error).message}`));
+  });
+
+  const remove = document.createElement('button');
+  remove.type = 'button';
+  remove.className = 'link-delete';
+  remove.textContent = '×';
+  remove.setAttribute('aria-label', '刪除');
+  remove.addEventListener('click', () => {
+    void deleteLink(link.query)
+      .then(renderLinks)
+      .catch((error) => showError(`刪除失敗：${(error as Error).message}`));
+  });
+
+  const item = document.createElement('li');
+  item.append(open, remove);
+  return item;
+}
+
+async function renderLinks(): Promise<void> {
+  const links = await listLinks();
+  linksSection.hidden = links.length === 0;
+  linkList.replaceChildren(...links.map(renderLink));
 }
 
 async function preview(): Promise<void> {
@@ -94,6 +144,7 @@ openOptions.addEventListener('click', (event) => {
   void chrome.runtime.openOptionsPage();
 });
 
+void renderLinks().catch((error) => showError(`讀取快速連結失敗：${(error as Error).message}`));
 void purgeExpired().catch((error) => console.error('purgeExpired failed', error));
 void offerCurrentTab().catch((error) => console.error('tab lookup failed', error));
 input.focus();
