@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Markdown Quick Preview 設定</title>
+  </head>
+  <body>
+    <main class="options">
+      <h1>Markdown Quick Preview 設定</h1>
+      <section>
+        <h2>GitHub Personal Access Token</h2>
+        <p>
+          Token 只存在本機 chrome.storage.local。建議使用 fine-grained token，只授予目標 repo 的
+          Contents: Read-only。
+        </p>
+        <label for="token">Token</label>
+        <input type="password" id="token" autocomplete="off" spellcheck="false" />
+        <div class="actions">
+          <button id="save" type="button">儲存</button>
+          <button id="clear" type="button">清除</button>
+        </div>
+        <p id="status" role="status"></p>
+      </section>
+    </main>
+    <script type="module" src="/src/options/main.ts"></script>
+  </body>
+</html>

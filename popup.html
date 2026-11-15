@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Markdown Quick Preview</title>
+  </head>
+  <body>
+    <main class="popup">
+      <textarea
+        id="input"
+        rows="8"
+        spellcheck="false"
+        placeholder="貼上 Markdown 文字、GitHub repo 網址或 .md 連結"
+      ></textarea>
+      <button id="use-tab" type="button" hidden></button>
+      <div class="actions">
+        <button id="preview" type="button">預覽</button>
+      </div>
+      <p id="error" role="alert"></p>
+      <a id="open-options" href="#">設定 GitHub Token</a>
+    </main>
+    <script type="module" src="/src/popup/main.ts"></script>
+  </body>
+</html>
