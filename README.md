@@ -52,7 +52,11 @@ Chrome / Edge（Manifest V3）擴充功能：快速預覽 Markdown 與 Mermaid �
 
 Token 僅存於 `chrome.storage.local`，只會以 `Authorization` 標頭傳送至 `api.github.com` 與 `raw.githubusercontent.com`。舊版的單一 `githubToken` 會自動遷移為 `*` 規則。
 
-建議使用僅具備唯讀權限的 Fine-grained Personal Access Token。
+建立 Fine-grained Personal Access Token 時，只需要唯讀權限：
+
+- Repository permissions：Read access to code, codespaces, and metadata
+
+不需要其他權限。選項頁也會顯示此提示與建立 Token 的連結。
 
 ## 權限說明
 
