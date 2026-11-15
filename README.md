@@ -92,7 +92,7 @@ public/manifest.json   擴充功能 manifest（建置時複製至 dist）
 | 指令 | 說明 |
 | --- | --- |
 | `npm run dev` | 監看模式建置至 `dist/` |
-| `npm run build` | 型別檢查後建置 |
+| `npm run build` | 型別檢查後建置，並打包為 `release/markdown-quick-preview-<version>.zip`（可直接上傳商店） |
 | `npm run typecheck` | 僅執行 TypeScript 型別檢查 |
 | `npm test` | 執行 Vitest 單元測試 |
 
