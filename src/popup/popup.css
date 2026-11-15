@@ -53,6 +53,31 @@ button {
   color: #0969da;
 }
 
+#detected {
+  min-height: 1.2em;
+  margin: 0;
+  font-size: 12px;
+  color: #59636e;
+  word-break: break-word;
+}
+
+#detected[data-state='invalid'] {
+  color: #cf222e;
+}
+
+#force-paste-label {
+  align-self: flex-start;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: #59636e;
+}
+
+#force-paste-label[hidden] {
+  display: none;
+}
+
 .actions {
   display: flex;
   justify-content: flex-end;

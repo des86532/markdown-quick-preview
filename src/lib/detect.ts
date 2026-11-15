@@ -13,15 +13,17 @@ export type Detected =
   | { kind: 'url'; url: string };
 
 const REPO_HINT = '請提供 GitHub repo 網址，例如 https://github.com/owner/repo';
+const NON_FILE_HINT = '只支援 repo 首頁、tree（資料夾）或 blob（檔案）網址';
 
 export function classifyInput(raw: string): Detected {
   const trimmed = raw.trim();
   if (!trimmed) return { kind: 'empty' };
   if (/\s/.test(trimmed)) return { kind: 'paste', content: raw };
+  const candidate = /^(www\.)?github\.com\//i.test(trimmed) ? `https://${trimmed}` : trimmed;
 
   let url: URL;
   try {
-    url = new URL(trimmed);
+    url = new URL(candidate);
   } catch {
     return { kind: 'paste', content: raw };
   }
@@ -54,7 +56,10 @@ function classifyGithub(url: URL): Detected {
       target: { owner, repo, type: kind, rest: segments.slice(3) },
     };
   }
-  return { kind: 'github', target: { owner, repo, type: 'repo', rest: [] } };
+  if (segments.length === 2) {
+    return { kind: 'github', target: { owner, repo, type: 'repo', rest: [] } };
+  }
+  return { kind: 'invalid', reason: NON_FILE_HINT };
 }
 
 /**
