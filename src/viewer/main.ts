@@ -31,6 +31,11 @@ interface Book {
   pageSet: Set<string>;
 }
 
+interface TocEntry {
+  heading: HTMLElement;
+  link: HTMLAnchorElement;
+}
+
 interface Action {
   label: string;
   run: () => void;
@@ -43,6 +48,10 @@ let currentLink: Omit<SavedLink, 'createdAt'> | null = null;
 // Incremented by every navigation; async steps compare against it to drop stale results.
 let generation = 0;
 const fileCache = new Map<string, string>();
+let tocEntries: TocEntry[] = [];
+let activeToc: TocEntry | null = null;
+// Gap below the top of the scroll area at which a heading counts as the current section.
+const TOC_OFFSET = 24;
 
 function absoluteHref(href: string): string | null {
   if (ABSOLUTE_URL.test(href)) return href;
@@ -213,6 +222,71 @@ function markActive(page: string): void {
   }
 }
 
+function clearToc(): void {
+  sidebar.querySelector('ul.toc')?.remove();
+  tocEntries = [];
+  activeToc = null;
+}
+
+/** Builds the outline of the rendered document (h1–h3), or null when it has no headings. */
+function buildToc(): HTMLUListElement | null {
+  const headings = [...content.querySelectorAll<HTMLElement>('h1[id], h2[id], h3[id]')];
+  if (headings.length === 0) return null;
+
+  const minLevel = Math.min(...headings.map((h) => Number(h.tagName[1])));
+  const list = document.createElement('ul');
+  list.className = 'toc';
+  for (const heading of headings) {
+    const text = heading.textContent?.trim() ?? '';
+    if (!text) continue;
+    const item = document.createElement('li');
+    const link = document.createElement('a');
+    link.href = `#${encodeURIComponent(heading.id)}`;
+    link.dataset.heading = heading.id;
+    link.title = text;
+    link.textContent = text;
+    link.style.setProperty('--depth', String(Number(heading.tagName[1]) - minLevel));
+    item.append(link);
+    list.append(item);
+    tocEntries.push({ heading, link });
+  }
+  return tocEntries.length > 0 ? list : null;
+}
+
+/** Repo mode: nests the outline under the active file. Paste / URL: the outline is the whole sidebar. */
+function showToc(): void {
+  clearToc();
+  const toc = buildToc();
+  if (book) {
+    const activeItem = sidebar.querySelector('a.active[data-page]')?.parentElement;
+    if (toc && activeItem) activeItem.append(toc);
+  } else {
+    sidebar.replaceChildren(...(toc ? [toc] : []));
+    sidebar.hidden = toc === null;
+  }
+  updateActiveHeading();
+}
+
+function updateActiveHeading(): void {
+  if (tocEntries.length === 0) return;
+  const top = main.getBoundingClientRect().top + TOC_OFFSET;
+  let current = tocEntries[0];
+  for (const entry of tocEntries) {
+    if (entry.heading.getBoundingClientRect().top > top) break;
+    current = entry;
+  }
+  // At the very bottom the last sections may never reach the top: treat the last heading as current.
+  if (main.scrollTop > 0 && main.scrollTop + main.clientHeight >= main.scrollHeight - 2) {
+    current = tocEntries[tocEntries.length - 1];
+  }
+  if (current === activeToc) return;
+
+  activeToc?.link.classList.remove('active');
+  current.link.classList.add('active');
+  current.link.scrollIntoView({ block: 'nearest' });
+  activeToc = current;
+}
+
 function updatePager(page: string): void {
   if (!book) return;
   const index = book.pages.indexOf(page);
@@ -237,6 +311,7 @@ async function showPage(page: string, fragment: string): Promise<void> {
   const gen = ++generation;
   const { owner, repo, ref } = book;
   currentPage = page;
+  clearToc();
   markActive(page);
   updatePager(page);
 
@@ -256,6 +331,7 @@ async function showPage(page: string, fragment: string): Promise<void> {
     if (gen !== generation) return;
 
     main.scrollTop = 0;
+    showToc();
     scrollToId(fragment);
   } catch (error) {
     if (gen === generation) showError(error);
@@ -294,6 +370,7 @@ async function openPaste(id: string): Promise<void> {
     expiresAt: record.createdAt + PASTE_TTL_MS,
   });
   await renderDocument(content, record.content, 'markdown', pasteResolver);
+  showToc();
 }
 
 function showAuthPrompt(origin: string, src: string): void {
@@ -339,6 +416,7 @@ async function openUrl(src: string): Promise<void> {
   setTitles(title, `${title} · MD Preview`);
   void offerSave({ query: `url=${encodeURIComponent(src)}`, title, kind: 'url', expiresAt: null });
   await renderDocument(content, source, kind, urlResolver(url));
+  showToc();
 }
 
 function parseType(value: string | null): 'repo' | 'tree' | 'blob' {
@@ -450,6 +528,27 @@ content.addEventListener('click', (event) => {
 });
 
 window.addEventListener('hashchange', goToHashPage);
+
+// Outline links scroll within the page; the hash is reserved for the repo page route.
+sidebar.addEventListener('click', (event) => {
+  const link = event.target instanceof Element ? event.target.closest<HTMLAnchorElement>('a[data-heading]') : null;
+  if (!link) return;
+  event.preventDefault();
+  scrollToId(link.dataset.heading ?? '');
+});
+
+let scrollFrame = 0;
+main.addEventListener(
+  'scroll',
+  () => {
+    if (scrollFrame) return;
+    scrollFrame = requestAnimationFrame(() => {
+      scrollFrame = 0;
+      updateActiveHeading();
+    });
+  },
+  { passive: true },
+);
 
 saveButton.addEventListener('click', () => {
   const link = currentLink;
