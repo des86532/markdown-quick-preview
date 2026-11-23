@@ -11,6 +11,7 @@ Chrome / Edge（Manifest V3）擴充功能：快速預覽 Markdown 與 Mermaid �
   - `https://github.com/owner/repo`：列出 repo 內所有 Markdown / Mermaid 文件，以目錄樹呈現，`README` 優先。
   - `https://github.com/owner/repo/tree/<ref>/<path>`：預覽指定資料夾。分支名稱可含 `/`，會自動嘗試拆分 ref 與路徑。
   - `https://github.com/owner/repo/blob/<ref>/<path>`：預覽單一檔案。
+- **文件大綱**：側邊欄列出目前文件的標題（H1–H3），捲動時自動標示目前畫面所在的章節，點擊可跳轉。GitHub repo 模式下大綱會顯示在目前檔案底下。
 - **快速連結**：預覽過的 GitHub repo、網址與貼上內容可儲存在 IndexedDB 中，於彈出視窗列出、開啟或刪除。
 - **Mermaid 圖表**：```` ```mermaid ```` 區塊與 `.mmd` / `.mermaid` 檔案會被渲染為圖表（Mermaid 採延遲載入）。
 - **程式碼高亮**：使用 highlight.js。
