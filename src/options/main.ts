@@ -1,8 +1,9 @@
-import { getTokenRules, setTokenRules } from '../lib/storage';
+import { getTokenRules, isTokenSyncEnabled, setTokenRules } from '../lib/storage';
 import { type TokenRule, validateRules } from '../lib/tokens';
 import './options.css';
 
 const rulesEl = document.getElementById('rules') as HTMLDivElement;
+const syncCheckbox = document.getElementById('sync') as HTMLInputElement;
 const addButton = document.getElementById('add-rule') as HTMLButtonElement;
 const saveButton = document.getElementById('save') as HTMLButtonElement;
 const status = document.getElementById('status') as HTMLParagraphElement;
@@ -66,11 +67,20 @@ saveButton.addEventListener('click', () => {
     status.textContent = error;
     return;
   }
-  void run(() => setTokenRules(rules), '已儲存');
+  const sync = syncCheckbox.checked;
+  void run(async () => {
+    try {
+      await setTokenRules(rules, sync);
+    } catch (error) {
+      if (sync && /QUOTA/i.test((error as Error).message)) throw new Error('超出 Google 同步容量上限，請減少規則或取消同步');
+      throw error;
+    }
+  }, sync ? '已儲存並同步至 Google 帳號' : '已儲存（僅本機）');
 });
 
-void getTokenRules()
-  .then((rules) => {
+void Promise.all([getTokenRules(), isTokenSyncEnabled()])
+  .then(([rules, sync]) => {
+    syncCheckbox.checked = sync;
     if (rules.length === 0) addRow({ pattern: '*', token: '' });
     for (const rule of rules) addRow(rule);
   })

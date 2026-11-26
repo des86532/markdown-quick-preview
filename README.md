@@ -51,7 +51,7 @@ Chrome / Edge（Manifest V3）擴充功能：快速預覽 Markdown 與 Mermaid �
 
 比對順序為 `owner/repo` → `owner` → `*`，大小寫不敏感。規則不可重複，Token 不可為空。
 
-Token 僅存於 `chrome.storage.local`，只會以 `Authorization` 標頭傳送至 `api.github.com` 與 `raw.githubusercontent.com`。舊版的單一 `githubToken` 會自動遷移為 `*` 規則。
+Token 預設僅存於 `chrome.storage.local`；勾選「透過 Google 帳號同步 Token」後改存 `chrome.storage.sync`，由 Chrome 同步到同一 Google 帳號的其他裝置（容量上限約 8KB，足夠數十條規則），取消勾選則移回本機並從 Google 帳號移除。Token 只會以 `Authorization` 標頭傳送至 `api.github.com` 與 `raw.githubusercontent.com`。舊版的單一 `githubToken` 會自動遷移為 `*` 規則。
 
 建立 Fine-grained Personal Access Token 時，只需要唯讀權限：
 
@@ -63,7 +63,7 @@ Token 僅存於 `chrome.storage.local`，只會以 `Authorization` 標頭傳送�
 
 | 權限 | 用途 |
 | --- | --- |
-| `storage` | 保存 Token 規則與暫存貼上內容 |
+| `storage` | 保存 Token 規則與暫存貼上內容；啟用同步時以 `chrome.storage.sync` 同步 Token 規則 |
 | `activeTab` | 取得目前分頁網址 |
 | `unlimitedStorage` | 允許保存較大的貼上內容與連結快取 |
 | `https://api.github.com/*` | 讀取 GitHub repo 目錄樹與 API |
