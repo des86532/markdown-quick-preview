@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Markdown Quick Preview",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "快速預覽 Markdown 與 Mermaid：貼上文字、連結或 GitHub repo，產生臨時預覽頁。",
   "action": {
     "default_popup": "popup.html",
