@@ -61,7 +61,21 @@ export async function purgeExpired(): Promise<void> {
   if (expired.length > 0) await chrome.storage.local.remove(expired);
 }
 
+/** Rules saved in chrome.storage.sync mean the user opted into syncing them via their Google account. */
+async function getSyncedTokenRules(): Promise<TokenRule[] | null> {
+  const stored = await chrome.storage.sync.get(TOKENS_KEY);
+  const rules = stored[TOKENS_KEY];
+  return Array.isArray(rules) ? (rules as TokenRule[]) : null;
+}
+
+export async function isTokenSyncEnabled(): Promise<boolean> {
+  return (await getSyncedTokenRules()) !== null;
+}
+
 export async function getTokenRules(): Promise<TokenRule[]> {
+  const synced = await getSyncedTokenRules();
+  if (synced) return synced;
+
   const stored = await chrome.storage.local.get([TOKENS_KEY, LEGACY_TOKEN_KEY]);
   const rules = stored[TOKENS_KEY];
   if (Array.isArray(rules)) return rules as TokenRule[];
@@ -76,6 +90,11 @@ export async function getTokenRules(): Promise<TokenRule[]> {
   return [];
 }
 
-export async function setTokenRules(rules: TokenRule[]): Promise<void> {
-  await chrome.storage.local.set({ [TOKENS_KEY]: rules });
+/** Writes to the target area first, then clears the other, so a failed write never loses rules. */
+export async function setTokenRules(rules: TokenRule[], sync = false): Promise<void> {
+  const [target, other] = sync
+    ? [chrome.storage.sync, chrome.storage.local]
+    : [chrome.storage.local, chrome.storage.sync];
+  await target.set({ [TOKENS_KEY]: rules });
+  await other.remove(TOKENS_KEY);
 }

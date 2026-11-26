@@ -11,7 +11,7 @@
       <section>
         <h2>GitHub Personal Access Tokens</h2>
         <p>
-          Token 只存在本機 chrome.storage.local。fine-grained token 只能綁定一個 owner，可為不同 owner 或 repo
+          Token 預設只存在本機 chrome.storage.local。fine-grained token 只能綁定一個 owner，可為不同 owner 或 repo
           各設一個。比對順序：owner/repo → owner → *（預設）。
         </p>
         <div class="hint">
@@ -25,6 +25,16 @@
           </p>
         </div>
         <div id="rules"></div>
+        <label class="sync">
+          <input id="sync" type="checkbox" />
+          <span>
+            透過 Google 帳號同步 Token
+            <small>
+              存到 chrome.storage.sync，登入同一 Google 帳號且開啟擴充功能同步的 Chrome 都能取得。
+              取消勾選並儲存後，Token 會移回本機，並從 Google 帳號移除（其他裝置將不再取得）。
+            </small>
+          </span>
+        </label>
         <div class="actions">
           <button id="add-rule" type="button">新增規則</button>
           <button id="save" type="button">儲存</button>
